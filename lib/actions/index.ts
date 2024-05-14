@@ -90,25 +90,22 @@ export async function getSimilarProducts (productId: string) {
 
 export async function addUserEmailToProduct(productId: string , userEmail: string) {
   try {
-    const product = await Product.findById(productId)
+    const product = await Product.findById(productId);
 
-    if (!product) {
-      return
+    if(!product) return;
+
+    const userExists = product.users.some((user: User) => user.email === userEmail);
+
+    if(!userExists) {
+      product.users.push({ email: userEmail });
+
+      await product.save();
+
+      const emailContent = await generateEmail(product, "WELCOME");
+
+      await sendEmail(emailContent, [userEmail]);
     }
-
-    const userExists = await product.users.some((user : User)=> user.email === userEmail)
-
-    if (!userExists) {
-      product.users.push({ email: userEmail})
-
-      await product.save()
-
-      const emailBody = await generateEmail(product , "WELCOME")
-
-      await sendEmail(emailBody , [userEmail])
-    }
-
-    } catch (error) {
-    console.log(error)
+  } catch (error) {
+    console.log(error);
   }
 }
